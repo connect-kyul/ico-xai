@@ -1,27 +1,72 @@
-# ChatGPT Subscription Connection
+# ChatGPT Subscription Through Codex OAuth
 
-Ico-XAI supports two OpenAI-related paths:
+Ico-XAI should support ChatGPT subscription-backed model access through OpenAI Codex OAuth, similar to OpenClaw.
 
-1. OpenAI API key
-   - Used by the devnetworking.com web app to call OpenAI models directly.
-   - API usage is billed and managed separately from ChatGPT subscriptions.
+## What this means
 
-2. ChatGPT App via Apps SDK/MCP
-   - Used when a ChatGPT Plus/Pro/Business user wants to use Ico-XAI inside ChatGPT.
-   - This is the official path for connecting an external app experience to ChatGPT.
-   - The app exposes MCP tools and optional UI widgets to ChatGPT.
+OpenAI Codex supports two OpenAI sign-in methods:
 
-ChatGPT subscriptions are not exposed as a third-party OAuth credential that an external web app can exchange for model API quota. Do not build a flow that asks for ChatGPT passwords, scrapes ChatGPT web sessions, or claims to consume a user's ChatGPT subscription from devnetworking.com.
+1. ChatGPT sign-in for subscription-backed Codex access
+2. OpenAI API key sign-in for usage-based Platform billing
 
-Useful OpenAI references:
+For ChatGPT sign-in, Codex opens a browser login flow and returns access credentials to the local Codex client. Active sessions can refresh automatically. The credentials must be treated like secrets.
 
-- Apps SDK: https://developers.openai.com/apps-sdk
-- Apps SDK authentication: https://developers.openai.com/apps-sdk/build/auth
-- ChatGPT and API billing separation: https://help.openai.com/en/articles/9039756-managing-billing-settings-on-chatgpt-web-and-platform
-- Moving ChatGPT subscription to API: https://help.openai.com/en/articles/8156019-how-can-i-move-my-chatgpt-subscription-to-the-api
+OpenClaw uses this pattern by keeping the model route under the canonical `openai/*` provider, while auth profiles may point to either API-key credentials or ChatGPT/Codex OAuth credentials.
 
-Recommended next implementation step:
+## Ico-XAI product architecture
 
-- Add an `apps/chatgpt-mcp` package that exposes Ico-XAI tools over MCP.
-- Reuse the existing web visualization components as Apps SDK widgets where useful.
-- Keep devnetworking.com login on Google/Discord and keep model calls there API-key based.
+Do not store a user's Codex OAuth refresh token in the Vercel web app.
+
+Use this architecture instead:
+
+1. Web app
+   - Handles Google/Discord login.
+   - Shows provider setup, credential priority, and connected device state.
+   - Sends tasks to the paired desktop runtime.
+
+2. Desktop runtime
+   - Runs on the user's Windows/macOS computer.
+   - Starts or guides `codex login` / `codex login --device-auth`.
+   - Stores Codex credentials in the OS keychain or a protected local store.
+   - Executes Codex-backed model calls and computer-control actions locally.
+
+3. Credential router
+   - Tries `openai-codex-oauth` first when it is priority 1.
+   - Falls back to OpenAI API key or other provider keys when the subscription quota is unavailable, rate-limited, or disabled.
+
+## Supported setup options
+
+Browser login:
+
+```powershell
+codex login
+```
+
+Device-code login for headless or callback-hostile environments:
+
+```powershell
+codex login --device-auth
+```
+
+Business/Enterprise automation can use Codex access tokens when the workspace permits them:
+
+```powershell
+$env:CODEX_ACCESS_TOKEN="<token>"
+codex exec "test prompt"
+```
+
+## Security rules
+
+- Never ask for a ChatGPT password.
+- Never scrape ChatGPT web sessions.
+- Never copy `~/.codex/auth.json` into the web app.
+- Never expose refresh tokens to browser JavaScript.
+- Store local Codex credentials using OS keychain when possible.
+- Show that subscription-backed Codex access can still have plan/weekly limits; do not advertise it as truly unlimited.
+
+## References
+
+- OpenAI Codex authentication: https://developers.openai.com/codex/auth
+- OpenAI Codex access tokens: https://developers.openai.com/codex/enterprise/access-tokens
+- OpenClaw OpenAI provider docs: https://github.com/openclaw/openclaw/blob/main/docs/providers/openai.md
+- OpenClaw OAuth docs: https://github.com/openclaw/openclaw/blob/main/docs/concepts/oauth.md

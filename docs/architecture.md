@@ -12,7 +12,7 @@
 
 ## Provider model
 
-API-key providers and subscription-backed providers are separate credential kinds. ChatGPT subscription support should be implemented through an explicit desktop browser/session connector and a clear user consent screen, because it is not equivalent to a server-side API key.
+API-key providers and subscription-backed providers are separate credential kinds. ChatGPT subscription support should use OpenAI Codex OAuth through the paired desktop runtime, not a server-side Vercel token store. The web app can configure `openai-codex-oauth` as the highest-priority credential, while the desktop runtime performs `codex login`, stores the local credentials securely, and executes Codex-backed agent turns.
 
 ## Security requirements
 
@@ -29,5 +29,6 @@ API-key providers and subscription-backed providers are separate credential kind
 - Database-backed users, devices, sessions, credentials, and audit logs
 - Secure secret storage such as OS keychain, KMS, or Vault
 - Realtime transport between web and desktop runtime
+- Desktop Codex OAuth bridge for `codex login`, device-code login, token refresh, and credential health checks
 - Computer-control executor implementation
 - Usage metering and provider-specific error normalization

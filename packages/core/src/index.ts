@@ -1,6 +1,7 @@
 export type ProviderKind =
   | "openai-api"
   | "openai-chatgpt-subscription"
+  | "openai-codex-oauth"
   | "anthropic"
   | "google"
   | "mistral"
