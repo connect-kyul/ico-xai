@@ -1,0 +1,22 @@
+{
+  "name": "ico-xai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cross-platform AI computer-control agent with web login, provider key routing, and desktop runtime.",
+  "packageManager": "npm@11.13.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @ico-xai/web",
+    "start": "npm run start --workspace @ico-xai/web",
+    "dev:desktop": "npm run dev --workspace @ico-xai/desktop",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

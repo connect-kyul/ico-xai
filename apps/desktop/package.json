@@ -1,0 +1,21 @@
+{
+  "name": "@ico-xai/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ico-xai/core": "file:../../packages/core",
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "electron": "^31.2.1",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.4"
+  }
+}
