@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Code2,
   Download,
+  ExternalLink,
   FileCode2,
   KeyRound,
   Loader2,
@@ -22,6 +23,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -240,6 +251,7 @@ export default function HomePage() {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [purpose, setPurpose] = useState<Purpose>("coding");
   const [dailyTokenUnlocked, setDailyTokenUnlocked] = useState(false);
+  const [chatGptAppReady, setChatGptAppReady] = useState(false);
   const activeTokenPolicy =
     purpose === "coding" ? "토큰 한도 최대 사용" : dailyTokenUnlocked ? "일상모드 토큰 제한 해제" : "일상모드 토큰 절약";
 
@@ -278,7 +290,7 @@ export default function HomePage() {
               <Badge className="w-fit" variant="secondary">Production auth</Badge>
               <CardTitle className="text-4xl">로그인</CardTitle>
               <CardDescription className="text-base leading-7">
-                Google 또는 Discord OAuth로 접속하고, 로그인 후 API 키와 ChatGPT 구독 연결을 설정합니다.
+                Google 또는 Discord OAuth로 접속하고, 로그인 후 API 키와 ChatGPT 앱 연결 방식을 설정합니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
@@ -316,7 +328,7 @@ export default function HomePage() {
               </div>
               <CardTitle className="text-4xl">AI 사용 환경 설정</CardTitle>
               <CardDescription className="text-base leading-7">
-                {session.user?.name ?? "사용자"}님, API 제공사와 키를 등록하세요. ChatGPT 구독자는 OAuth 연결도 선택할 수 있어요.
+                {session.user?.name ?? "사용자"}님, API 제공사와 키를 등록하세요. ChatGPT 구독자는 공식 Apps SDK 방식도 선택할 수 있어요.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
@@ -345,15 +357,63 @@ export default function HomePage() {
               </div>
               <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-4 md:col-span-2 md:flex-row md:items-center md:justify-between">
                 <div className="grid gap-1">
-                  <strong>ChatGPT 구독 OAuth</strong>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong>ChatGPT 구독 연결</strong>
+                    <Badge variant={chatGptAppReady ? "default" : "secondary"}>
+                      {chatGptAppReady ? "앱 연결 준비됨" : "공식 앱 방식"}
+                    </Badge>
+                  </div>
                   <span className="text-sm leading-6 text-muted-foreground">
-                    Plus/Pro 구독자는 API 키 대신 브라우저 세션 연결 플로우를 사용할 수 있습니다.
+                    ChatGPT 구독 한도를 외부 API처럼 OAuth로 가져오지는 않고, Ico-XAI를 ChatGPT 안에서 실행하는 Apps SDK/MCP 경로로 연결합니다.
                   </span>
                 </div>
-                <Button variant="outline">
-                  <KeyRound className="h-4 w-4" />
-                  OAuth 연결
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <KeyRound className="h-4 w-4" />
+                      연결 방식 보기
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>ChatGPT 구독은 API OAuth가 아닙니다</DialogTitle>
+                      <DialogDescription>
+                        OpenAI 공식 문서 기준으로 ChatGPT 구독 결제와 API 결제는 분리되어 있어요. 그래서 외부 웹앱이
+                        사용자의 Plus/Pro 구독 토큰을 OAuth로 받아 모델 호출에 쓰는 방식은 제공되지 않습니다.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-3">
+                      <div className="rounded-lg border border-border bg-muted/30 p-4">
+                        <strong>배포 가능한 연결 방식</strong>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          Ico-XAI를 ChatGPT Apps SDK 앱으로 만들고 MCP 서버를 노출하면, 사용자는 ChatGPT 안에서 구독
+                          계정으로 Ico-XAI 도구와 UI를 사용할 수 있습니다.
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-muted/30 p-4">
+                        <strong>현재 웹앱에서 모델 호출</strong>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          devnetworking.com 웹앱 자체에서 모델을 호출하려면 OpenAI API 키나 다른 제공사의 API 키를
+                          등록해야 합니다.
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button asChild variant="outline">
+                        <a href="https://developers.openai.com/apps-sdk" target="_blank" rel="noreferrer">
+                          Apps SDK 문서
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <DialogClose asChild>
+                        <Button onClick={() => setChatGptAppReady(true)}>
+                          ChatGPT 앱 방식으로 진행
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               <Button className="h-11 md:col-span-2" onClick={() => setOnboardingComplete(true)}>
                 설정 완료
